@@ -10,7 +10,6 @@ package aligningrecyclerview;
 
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.MotionEvent;
 
 import java.util.ArrayList;
@@ -19,7 +18,7 @@ import java.util.List;
 /**
  * @author Jorge Antonio Diaz-Benito Soriano (github.com/Stoyicker).
  */
-final class OnScrollListenerManagerOnItemTouchListener implements RecyclerView.OnItemTouchListener {
+public class OnScrollListenerManagerOnItemTouchListener implements RecyclerView.OnItemTouchListener {
 
   private final List<Binding> mScrollWatchers = new ArrayList<>();
   private int mLastX, mLastY;
@@ -27,10 +26,20 @@ final class OnScrollListenerManagerOnItemTouchListener implements RecyclerView.O
   @Override
   public boolean onInterceptTouchEvent(@NonNull final RecyclerView rv, @NonNull final
   MotionEvent e) {
+    boolean ret = false;
+
     if (rv.getScrollState() == RecyclerView.SCROLL_STATE_IDLE) {
       onTouchEvent(rv, e);
     }
-    return Boolean.FALSE;
+
+    for (final Binding x : mScrollWatchers) {
+      if (x.getFrom() == rv && x.getTo().getScrollState() != RecyclerView.SCROLL_STATE_IDLE) {
+        ret = true;
+        break;
+      }
+    }
+
+    return ret;
   }
 
   @Override
@@ -49,7 +58,6 @@ final class OnScrollListenerManagerOnItemTouchListener implements RecyclerView.O
 
     if ((action = e.getAction()) == MotionEvent.ACTION_DOWN && to
         .getScrollState() == RecyclerView.SCROLL_STATE_IDLE) {
-      Log.d("JORGETEST", "IF STATEMENT");
       mLastX = thisOSL.getScrolledX();
       mLastY = thisOSL.getScrolledY();
       from.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -78,14 +86,11 @@ final class OnScrollListenerManagerOnItemTouchListener implements RecyclerView.O
           }
         }
       }.init(to, orientation));
-    }
-    else {
-      Log.d("JORGETEST", "ELSE STATEMENT");
+    } else {
       final int scrolledX = thisOSL.getScrolledX(), scrolledY = thisOSL.getScrolledY();
       if (action == MotionEvent.ACTION_UP && (orientation == AligningRecyclerView
           .ALIGN_ORIENTATION_VERTICAL && mLastY == scrolledY || orientation == AligningRecyclerView.ALIGN_ORIENTATION_HORIZONTAL && mLastX == scrolledX || mLastY == scrolledY && mLastX == scrolledX)) {
-        Log.d("JORGETEST", "ELSE -> IF STATEMENT");
-        from.clearOnScrollListeners(); //TODO Remove the concrete one only
+        from.clearOnScrollListeners();
       }
     }
   }
